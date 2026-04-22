@@ -1,0 +1,79 @@
+[
+  {
+    "time": "07:30",
+    "flight": "AC 202",
+    "dest": "Montreal (YUL)",
+    "gate": "C45",
+    "status": "On Time"
+  },
+  {
+    "time": "08:00",
+    "flight": "AC 101",
+    "dest": "Toronto (YYZ)",
+    "gate": "C42",
+    "status": "On Time"
+  },
+  {
+    "time": "08:45",
+    "flight": "WS 105",
+    "dest": "Edmonton (YEG)",
+    "gate": "B22",
+    "status": "Boarding"
+  },
+  {
+    "time": "09:15",
+    "flight": "WS 702",
+    "dest": "Calgary (YYC)",
+    "gate": "C42",
+    "status": "Boarding"
+  },
+  {
+    "time": "10:00",
+    "flight": "DL 180",
+    "dest": "Seattle (SEA)",
+    "gate": "E71",
+    "status": "On Time"
+  },
+  {
+    "time": "10:30",
+    "flight": "UA 245",
+    "dest": "San Francisco (SFO)",
+    "gate": "E73",
+    "status": "Delayed"
+  },
+  {
+    "time": "11:15",
+    "flight": "LH 493",
+    "dest": "Frankfurt (FRA)",
+    "gate": "D52",
+    "status": "On Time"
+  },
+  {
+    "time": "11:45",
+    "flight": "BA 084",
+    "dest": "London (LHR)",
+    "gate": "D54",
+    "status": "Boarding"
+  },
+  {
+    "time": "12:30",
+    "flight": "JL 017",
+    "dest": "Tokyo (NRT)",
+    "gate": "D60",
+    "status": "Delayed"
+  },
+  {
+    "time": "13:20",
+    "flight": "CX 889",
+    "dest": "Hong Kong (HKG)",
+    "gate": "D63",
+    "status": "On Time"
+  },
+  {
+    "flight": "F8 123",
+    "dest": "Las Vegas (LAS)",
+    "time": "15:45",
+    "gate": "A10",
+    "status": "On Time"
+  }
+]

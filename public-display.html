@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YVR Flight Display</title>
+    <style>
+        body {
+            background-color: #0a0f1a;
+            color: #f0f0f0;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 20px;
+        }
+        h1 {
+            color: #ffd966;
+            text-align: center;
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 28px;
+        }
+        th {
+            text-align: left;
+            padding: 15px;
+            background-color: #1e2a3a;
+            color: #a0c4ff;
+            border-bottom: 3px solid #ffd966;
+        }
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #2c3e50;
+        }
+        .status-boarding { color: #4caf50; font-weight: bold; }
+        .status-delayed { color: #ff9800; font-weight: bold; }
+        .status-ontime { color: #2196f3; }
+        .status-departed { color: #9e9e9e; }
+        
+        .highlight-gate-change {
+            background-color: #ffd966 !important;
+            color: #0a0f1a !important;
+            transition: background-color 0.5s ease;
+        }
+        
+        .filter-bar {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .filter-btn {
+            padding: 10px 30px;
+            font-size: 24px;
+            border: none;
+            border-radius: 5px;
+            margin: 0 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-active {
+            background: #ffd966;
+            color: #0a0f1a;
+        }
+        .btn-inactive {
+            background: #1e2a3a;
+            color: white;
+            border: 1px solid #ffd966;
+        }
+    </style>
+</head>
+<body>
+    <h1>✈️ VANCOUVER INTERNATIONAL (YVR) ✈️</h1>
+    
+    <div class="filter-bar">
+        <button id="btn-departures" class="filter-btn btn-active">DEPARTURES</button>
+        <button id="btn-all" class="filter-btn btn-inactive">ALL FLIGHTS</button>
+    </div>
+
+    <table id="flight-table">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Flight</th>
+                <th>Destination</th>
+                <th>Gate</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="flight-body"></tbody>
+    </table>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let masterFlightList = [];
+        let flightData = [];
+        let currentFilter = 'departures';
+
+        const boardingChime = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3');
+        boardingChime.volume = 0.3;
+
+        function renderTable() {
+            const tbody = document.getElementById('flight-body');
+            let html = '';
+            
+            // Sort by time
+            const sorted = [...flightData].sort((a, b) => a.time.localeCompare(b.time));
+            
+            sorted.forEach(flight => {
+                let statusClass = 'status-ontime';
+                if (flight.status.includes('Boarding')) statusClass = 'status-boarding';
+                if (flight.status.includes('Delayed')) statusClass = 'status-delayed';
+                if (flight.status.includes('Departed')) statusClass = 'status-departed';
+
+                let displayTime = flight.time;
+                if (flight.status.includes('Delayed')) displayTime = 'Delayed';
+
+                html += `<tr data-flight="${flight.flight}">
+                    <td>${displayTime}</td>
+                    <td>${flight.flight}</td>
+                    <td>${flight.dest}</td>
+                    <td>${flight.gate}</td>
+                    <td class="${statusClass}">${flight.status}</td>
+                </tr>`;
+            });
+            
+            tbody.innerHTML = html;
+        }
+
+        function applyFilter(filterType) {
+            currentFilter = filterType;
+            if (filterType === 'departures') {
+                flightData = masterFlightList.filter(f => f.dest && f.dest.trim() !== '');
+            } else {
+                flightData = [...masterFlightList];
+            }
+            renderTable();
+            
+            document.getElementById('btn-departures').className = 
+                filterType === 'departures' ? 'filter-btn btn-active' : 'filter-btn btn-inactive';
+            document.getElementById('btn-all').className = 
+                filterType === 'all' ? 'filter-btn btn-active' : 'filter-btn btn-inactive';
+        }
+
+        async function loadInitialData() {
+            try {
+                const response = await fetch('/api/flights');
+                const data = await response.json();
+                masterFlightList = data;
+                applyFilter(currentFilter);
+            } catch (err) {
+                console.error('Failed to load flights:', err);
+                masterFlightList = [];
+                applyFilter(currentFilter);
+            }
+        }
+
+        socket.on('initial-data', (data) => {
+            masterFlightList = data;
+            applyFilter(currentFilter);
+        });
+
+        socket.on('flight-update', (updatedFlight) => {
+            const oldFlight = masterFlightList.find(f => f.flight === updatedFlight.flight);
+            const index = masterFlightList.findIndex(f => f.flight === updatedFlight.flight);
+            
+            if (index !== -1) {
+                masterFlightList[index] = updatedFlight;
+                
+                if (updatedFlight.status.includes('Boarding') && 
+                    oldFlight && !oldFlight.status.includes('Boarding')) {
+                    boardingChime.play().catch(e => console.log('Audio play prevented:', e));
+                }
+                
+                applyFilter(currentFilter);
+                
+                if (oldFlight && oldFlight.gate !== updatedFlight.gate) {
+                    const row = document.querySelector(`tr[data-flight="${updatedFlight.flight}"]`);
+                    if (row) {
+                        row.classList.add('highlight-gate-change');
+                        setTimeout(() => row.classList.remove('highlight-gate-change'), 1500);
+                    }
+                }
+            }
+        });
+
+        socket.on('flight-added', (newFlight) => {
+            masterFlightList.push(newFlight);
+            applyFilter(currentFilter);
+        });
+
+        document.getElementById('btn-departures').addEventListener('click', () => applyFilter('departures'));
+        document.getElementById('btn-all').addEventListener('click', () => applyFilter('all'));
+
+        document.body.addEventListener('click', () => {}, { once: true });
+
+        loadInitialData();
+    </script>
+</body>
+</html>

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YVR Staff Operations</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f4f7f6;
+            margin: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #002c5f;
+            margin: 0;
+        }
+        .user-info {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .logout-btn {
+            background: #d32f2f;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        .add-flight-btn {
+            background: #002c5f;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .add-flight-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .form-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn-primary {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-secondary {
+            background: #9e9e9e;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .flight-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .flight-info {
+            font-size: 24px;
+            font-weight: bold;
+            min-width: 300px;
+        }
+        .status-badge {
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            min-width: 120px;
+        }
+        button {
+            padding: 12px 24px;
+            margin: 0 5px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-boarding { background-color: #4caf50; color: white; }
+        .btn-delayed { background-color: #ff9800; color: white; }
+        .btn-departed { background-color: #9e9e9e; color: white; }
+        .btn-ontime { background-color: #2196f3; color: white; }
+        .gate-select {
+            padding: 10px;
+            font-size: 18px;
+        }
+        .error-message {
+            color: #d32f2f;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔒 YVR GATE AGENT OPERATIONS</h1>
+        <div class="user-info">
+            <span id="username-display">Loading...</span>
+            <button class="logout-btn" onclick="window.location.href='/logout'">LOGOUT</button>
+        </div>
+    </div>
+
+    <button class="add-flight-btn" id="show-add-form">➕ Add New Flight</button>
+
+    <div class="add-flight-form" id="add-flight-form">
+        <h3>Create New Flight</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Flight Number</label>
+                <input type="text" id="new-flight-number" placeholder="e.g., AC 500" maxlength="10">
+            </div>
+            <div class="form-group">
+                <label>Destination</label>
+                <input type="text" id="new-destination" placeholder="e.g., New York (JFK)">
+            </div>
+            <div class="form-group">
+                <label>Scheduled Time</label>
+                <input type="text" id="new-time" placeholder="e.g., 14:30">
+            </div>
+            <div class="form-group">
+                <label>Gate</label>
+                <select id="new-gate">
+                    <option value="C42">C42</option>
+                    <option value="C45">C45</option>
+                    <option value="B21">B21</option>
+                    <option value="B22">B22</option>
+                    <option value="E71">E71</option>
+                    <option value="E73">E73</option>
+                    <option value="D52">D52</option>
+                    <option value="D54">D54</option>
+                    <option value="D60">D60</option>
+                    <option value="D63">D63</option>
+                    <option value="A10">A10</option>
+                    <option value="A12">A12</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button class="btn-primary" id="submit-new-flight">Create Flight</button>
+            <button class="btn-secondary" id="cancel-add-flight">Cancel</button>
+        </div>
+        <div class="error-message" id="add-flight-error"></div>
+    </div>
+
+    <div id="flight-list"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let flightData = [];
+        let currentUser = null;
+
+        // Fetch current user info
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/api/user');
+                if (response.ok) {
+                    currentUser = await response.json();
+                    document.getElementById('username-display').textContent = `👤 ${currentUser.username} (${currentUser.role})`;
+                } else {
+                    window.location.href = '/login';
+                }
+            } catch (err) {
+                window.location.href = '/login';
+            }
+        }
+
+        function renderStaffCards() {
+            const container = document.getElementById('flight-list');
+            let html = '';
+            
+            // Sort flights by time
+            const sortedFlights = [...flightData].sort((a, b) => {
+                return a.time.localeCompare(b.time);
+            });
+            
+            sortedFlights.forEach(flight => {
+                let statusColor = '#2196f3';
+                if (flight.status.includes('Boarding')) statusColor = '#4caf50';
+                if (flight.status.includes('Delayed')) statusColor = '#ff9800';
+                if (flight.status.includes('Departed')) statusColor = '#9e9e9e';
+
+                let timeDisplay = flight.time;
+                if (flight.status.includes('Delayed')) timeDisplay = 'Delayed';
+
+                html += `<div class="flight-card">
+                    <div class="flight-info">
+                        ${flight.flight} to ${flight.dest} <br>
+                        <small>Gate: ${flight.gate} | Time: ${timeDisplay}</small>
+                    </div>
+                    <div class="status-badge" style="background-color: ${statusColor};">
+                        ${flight.status}
+                    </div>
+                    <div class="actions">
+                        <button class="btn-boarding" data-flight="${flight.flight}">BOARDING</button>
+                        <button class="btn-delayed" data-flight="${flight.flight}">DELAYED</button>
+                        <button class="btn-departed" data-flight="${flight.flight}">DEPARTED</button>
+                        <button class="btn-ontime" data-flight="${flight.flight}">ON TIME</button>
+                        <select class="gate-select" data-flight="${flight.flight}">
+                            <option value="C42">C42</option>
+                            <option value="C45">C45</option>
+                            <option value="B21">B21</option>
+                            <option value="B22">B22</option>
+                            <option value="E71">E71</option>
+                            <option value="E73">E73</option>
+                            <option value="D52">D52</option>
+                            <option value="D54">D54</option>
+                            <option value="D60">D60</option>
+                            <option value="D63">D63</option>
+                            <option value="A10">A10</option>
+                            <option value="A12">A12</option>
+                        </select>
+                    </div>
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+
+            document.querySelectorAll('.btn-boarding').forEach(btn => {
+                btn.addEventListener('click', () => updateStatus(btn.dataset.flight, 'Boarding'));
+            });
+            document.querySelectorAll('.btn-delayed').forEach(btn => {
+                btn.addEventListener('click', () => updateStatus(btn.dataset.flight, 'Delayed'));
+            });
+            document.querySelectorAll('.btn-departed').forEach(btn => {
+                btn.addEventListener('click', () => updateStatus(btn.dataset.flight, 'Departed'));
+            });
+            document.querySelectorAll('.btn-ontime').forEach(btn => {
+                btn.addEventListener('click', () => updateStatus(btn.dataset.flight, 'On Time'));
+            });
+            
+            document.querySelectorAll('.gate-select').forEach(select => {
+                const flight = flightData.find(f => f.flight === select.dataset.flight);
+                if (flight) select.value = flight.gate;
+                select.addEventListener('change', (e) => updateGate(select.dataset.flight, e.target.value));
+            });
+        }
+
+        function updateStatus(flightNumber, newStatus) {
+            const flight = flightData.find(f => f.flight === flightNumber);
+            if (flight) {
+                flight.status = newStatus;
+                socket.emit('staff-update', flight);
+                renderStaffCards();
+            }
+        }
+
+        function updateGate(flightNumber, newGate) {
+            const flight = flightData.find(f => f.flight === flightNumber);
+            if (flight) {
+                flight.gate = newGate;
+                socket.emit('staff-update', flight);
+                renderStaffCards();
+            }
+        }
+
+        // Socket events
+        socket.on('initial-data', (data) => {
+            flightData = data;
+            renderStaffCards();
+        });
+
+        socket.on('flight-update', (updatedFlight) => {
+            const index = flightData.findIndex(f => f.flight === updatedFlight.flight);
+            if (index !== -1) {
+                flightData[index] = updatedFlight;
+                renderStaffCards();
+            }
+        });
+
+        socket.on('flight-added', (newFlight) => {
+            flightData.push(newFlight);
+            renderStaffCards();
+        });
+
+        // HTTP fallback load
+        async function loadInitialDataHttp() {
+            try {
+                const response = await fetch('/api/flights');
+                const data = await response.json();
+                flightData = data;
+                renderStaffCards();
+            } catch (err) {
+                console.error('Failed to load flights:', err);
+            }
+        }
+
+        // Add Flight Form Logic
+        document.getElementById('show-add-form').addEventListener('click', () => {
+            document.getElementById('add-flight-form').style.display = 'block';
+            document.getElementById('show-add-form').style.display = 'none';
+        });
+
+        document.getElementById('cancel-add-flight').addEventListener('click', () => {
+            document.getElementById('add-flight-form').style.display = 'none';
+            document.getElementById('show-add-form').style.display = 'block';
+            document.getElementById('add-flight-error').textContent = '';
+            // Clear inputs
+            document.getElementById('new-flight-number').value = '';
+            document.getElementById('new-destination').value = '';
+            document.getElementById('new-time').value = '';
+        });
+
+        document.getElementById('submit-new-flight').addEventListener('click', async () => {
+            const flight = document.getElementById('new-flight-number').value.trim();
+            const dest = document.getElementById('new-destination').value.trim();
+            const time = document.getElementById('new-time').value.trim();
+            const gate = document.getElementById('new-gate').value;
+            
+            const errorDiv = document.getElementById('add-flight-error');
+            
+            if (!flight || !dest || !time) {
+                errorDiv.textContent = 'All fields are required.';
+                return;
+            }
+            
+            // Simple time format validation (HH:MM)
+            if (!/^\d{2}:\d{2}$/.test(time)) {
+                errorDiv.textContent = 'Time must be in HH:MM format (e.g., 14:30).';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/flights', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ flight, dest, time, gate })
+                });
+                
+                if (response.ok) {
+                    const newFlight = await response.json();
+                    // Socket will also broadcast, but we'll update locally immediately
+                    flightData.push(newFlight);
+                    renderStaffCards();
+                    
+                    // Hide form and reset
+                    document.getElementById('add-flight-form').style.display = 'none';
+                    document.getElementById('show-add-form').style.display = 'block';
+                    document.getElementById('new-flight-number').value = '';
+                    document.getElementById('new-destination').value = '';
+                    document.getElementById('new-time').value = '';
+                    errorDiv.textContent = '';
+                } else {
+                    const err = await response.json();
+                    errorDiv.textContent = err.error || 'Failed to add flight.';
+                }
+            } catch (err) {
+                errorDiv.textContent = 'Network error. Please try again.';
+                console.error(err);
+            }
+        });
+
+        // Initialize
+        loadUserInfo();
+        loadInitialDataHttp();
+    </script>
+</body>
+</html>
